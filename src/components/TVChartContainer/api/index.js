@@ -1,30 +1,48 @@
 import historyProvider from "./historyProvider";
 import stream from "./stream";
+import getAllSymbols from "../../../utils/getAllSymbols";
 
-const supportedResolutions = [
-  "1",
-  "3",
-  "5",
-  "15",
-  "30",
-  "60",
-  "120",
-  "240",
-  "D",
-];
+const api_root =
+  "https://min-api.cryptocompare.com/data/v4/all/exchanges?api_key=3cccf05653ee303b8b4b947ef9e6f6a072e589b4d69504de18b064e8a4736954";
 
 const config = {
-  supported_resolutions: supportedResolutions,
+  supportedResolutions: ["1", "3", "5", "15", "30", "60", "120", "240", "D"],
+  exchanges: [
+    {
+      value: "Binance",
+      name: "Binance",
+      desc: "Binance",
+    },
+  ],
+  symbols_types: [
+    {
+      name: "crypto",
+      value: "crypto",
+    },
+  ],
 };
 
 export default {
-  onReady: (cb) => {
+  onReady: async (cb) => {
     console.log("=====onReady running");
     setTimeout(() => cb(config), 0);
   },
-  searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
-    console.log(userInput, 'userInput userInput')
+  searchSymbols: async (
+    userInput,
+    exchange,
+    symbolType,
+    onResultReadyCallback
+  ) => {
     console.log("====Search Symbols running");
+
+    const symbols = await getAllSymbols(api_root, config);
+    const newSymbols = symbols.filter((symbol) => {
+      const isExchangeValid = exchange === "" || symbol.exchange === exchange;
+      const isFullSymbolContainsInput =
+        symbol.full_name.toLowerCase().indexOf(userInput.toLowerCase()) !== -1;
+      return isExchangeValid && isFullSymbolContainsInput;
+    });
+    onResultReadyCallback(newSymbols);
   },
   resolveSymbol: (
     symbolName,
@@ -46,7 +64,7 @@ export default {
       pricescale: 100000000,
       has_intraday: true,
       intraday_multipliers: ["1", "60"],
-      supported_resolution: supportedResolutions,
+      supported_resolution: config.supportedResolutions,
       volume_precision: 8,
       data_status: "streaming",
     };
@@ -58,8 +76,6 @@ export default {
       onSymbolResolvedCallback(symbol_stub);
       console.log("Resolving that symbol....", symbol_stub);
     }, 0);
-
-    // onResolveErrorCallback('Not feeling it today')
   },
   getBars: function (
     symbolInfo,

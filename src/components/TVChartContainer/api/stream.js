@@ -63,7 +63,6 @@ socket.on("m", (e) => {
   };
 
   const channelString = `${data.sub_type}~${data.exchange}~${data.to_sym}~${data.from_sym}`;
-  console.log(channelString, "channelString\n\n\n\n\n");
 
   const sub = _subs.find((e) => e.channelString === channelString);
 
